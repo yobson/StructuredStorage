@@ -13,8 +13,8 @@ import System.IO.Structrued.Storage
 import System.IO.Structrued.Storage.Flatten
 
 -- We first define an api
-type FileAPI = "tmp" :/ "Files" :/ (  Capture Int :> Capture String :> File String
-                                 :<|> Capture String :> File String
+type FileAPI = "tmp" :/ "Files" :/ (  Capture Int :/ Capture String :/ File String
+                                 :<|> Capture String :/ File String
                                    )
 
 -- We make a proxy of our api
