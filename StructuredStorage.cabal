@@ -24,6 +24,12 @@ library
   other-modules:       System.IO.StructuredStorage.Internal.FileMonad
   -- other-extensions:
   build-depends:       base >=4.14 && <4.15,
-                       mtl
+                       mtl,
+                       uri-encode,
+                       time,
+                       bytestring,
+                       directory,
+                       filepath
+
   hs-source-dirs:      src-lib
   default-language:    Haskell2010

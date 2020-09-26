@@ -7,34 +7,83 @@ I was worried about hand crafting the file paths. How could I be sure that I got
 in the future? I thought of how servant solves the exact same problem and stole the idea.
 
 ## Library Usage
+Here is a comprehensive example:
 ```haskell
+{-# LANGUAGE DeriveGeneric #-}     -- Used by Aeson
+{-# LANGUAGE FlexibleInstances #-} -- Needed for line 28
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
+
+module Main where
+
+import Data.Aeson
+import GHC.Generics
+
+-- Needed to use library
 import Data.Proxy
-import System.IO.Structrued.Storage
-import System.IO.Structrued.Storage.Flatten
 
--- We first define an api
-type FileAPI = "tmp" :/ "Files" :/ (  Capture Int :/ Capture String :/ File String
-                                 :<|> Capture String :/ File String
-                                   )
+-- These are exported by the library
+import System.IO.StructuredStorage
+import System.IO.StructuredStorage.Flatten
 
--- We make a proxy of our api
+-- We start by making a Type and JSON encoding
 
-api :: Proxy API
+data Person = Person { name :: String
+                     , age  :: Int
+                     } deriving (Generic, Show)
+
+instance ToJSON Person where
+  toEncoding = genericToEncoding defaultOptions
+
+instance FromJSON Person
+
+-- We are going to store a list of people in a file
+-- for this we need to define FileType for [People]
+
+instance FileType [Person] where
+  toFile   = encode
+  fromFile = decode
+
+data Department = IT | Development
+
+instance Capturable Department where
+  toPath IT          = "IT"
+  toPath Development = "Development"
+
+-- We can now use the Department type in a filepath
+
+-- Next we can define our API
+type FileAPI = "tmp" :/ (  "Current" :/ Capture Department :/ File "people.json" [Person]
+                      :<|> "Old"     :/ File "people.json" [Person]
+                        )
+
+-- In the api defined above, we two folders, tmp/Current and tmp/Old
+-- In both, we have a file named 'people.json'
+
+-- We now define the functions to access the files
+currentPeople :: Department -> FileMonad ()
+oldPeople     :: FileMonad ()
+
+-- We use proxy to pass our type to the next function
+api :: Proxy FileAPI
 api = Proxy
 
--- We then define the client functions
+-- We magically fill the functions defined above!
+currentPeople :<|> oldPeople = clientAt (flatten api) "/"
 
-getFstFile :: Int -> String -> FileMonad String ()
-getSndFile :: String -> FileMonad String ()
-getFstFile :<|> getSndFile = clientIn (flatten api) "/"
+someIOOperations :: FileMonad (Maybe [Person])
+someIOOperations = do
+  let peopleIT  = take 2 $ repeat $ Person {name="Foo", age = 666}
+  let peopleDev = take 3 $ repeat $ Person {name="Bar", age = 666}
+  currentPeople IT
+  writeF peopleIT
+  currentPeople Development
+  writeF peopleDev
+  currentPeople IT
+  readF
 
-
-fileOps = getFstFile 10 "Hello.txt" >>= writeF "Hello World"
-
-main = runOps fileOps >> return ()
-
--- This program will put "Hello World" into "/tmp/10/Hello.txt"
-
+main :: IO ()
+main = runOps someIOOperations >>= print
 ```
 
 There is still a lot of work to do!
