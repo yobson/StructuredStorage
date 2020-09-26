@@ -6,7 +6,7 @@ module System.IO.StructuredStorage
 ( Capture
 , File
 , (:<|>)(..)
-, (:>)
+, (:/)
 , FileMonad
 , readF
 , writeF
@@ -24,8 +24,8 @@ import System.IO.StructuredStorage.Internal.FileMonad
 data a :<|> b = a :<|> b
 infixr 8 :<|>
 
-data (a :: k) :> (b :: *)
-infixr 9 :>
+data (a :: k) :/ (b :: *)
+infixr 9 :/
 
 data Capture (a :: *)
 
@@ -52,13 +52,13 @@ instance (HasFile a, HasFile b) => HasFile (a :<|> b) where
 
   clientAt _ file = clientAt (Proxy @a) file :<|> clientAt (Proxy @b) file
 
-instance (Show a, HasFile r) => HasFile (Capture a :> r) where
-  type Client (Capture a :> r) = a -> Client r
+instance (Show a, HasFile r) => HasFile (Capture a :/ r) where
+  type Client (Capture a :/ r) = a -> Client r
 
   clientAt _ file x = clientAt (Proxy @r) $ file ++ ('/':(show x))
 
-instance (KnownSymbol s, HasFile r) => HasFile (s :> r) where
-  type Client ((s :: Symbol) :> r) = Client r
+instance (KnownSymbol s, HasFile r) => HasFile (s :/ r) where
+  type Client ((s :: Symbol) :/ r) = Client r
 
   clientAt _ file = clientAt (Proxy @r) $ file ++ ('/':symb)
       where symb = symbolVal (Proxy @s)
@@ -78,13 +78,13 @@ instance (HasRead a, HasRead b) => HasRead (a :<|> b) where
 
   readAt _ file = readAt (Proxy @a) file :<|> readAt (Proxy @b) file
 
-instance (Show a, HasRead r) => HasRead (Capture a :> r) where
-  type Reader (Capture a :> r) = a -> Reader r
+instance (Show a, HasRead r) => HasRead (Capture a :/ r) where
+  type Reader (Capture a :/ r) = a -> Reader r
 
   readAt _ file x = readAt (Proxy @r) $ file ++ ('/':(show x))
 
-instance (KnownSymbol s, HasRead r) => HasRead (s :> r) where
-  type Reader ((s :: Symbol) :> r) = Reader r
+instance (KnownSymbol s, HasRead r) => HasRead (s :/ r) where
+  type Reader ((s :: Symbol) :/ r) = Reader r
 
   readAt _ file = readAt (Proxy @r) $ file ++ ('/':symb)
       where symb = symbolVal (Proxy @s)
@@ -103,13 +103,13 @@ instance (HasWrite a, HasWrite b) => HasWrite (a :<|> b) where
 
   writeAt _ file = writeAt (Proxy @a) file :<|> writeAt (Proxy @b) file
 
-instance (Show a, HasWrite r) => HasWrite (Capture a :> r) where
-  type Writer (Capture a :> r) = a -> Writer r
+instance (Show a, HasWrite r) => HasWrite (Capture a :/ r) where
+  type Writer (Capture a :/ r) = a -> Writer r
 
   writeAt _ file x = writeAt (Proxy @r) $ file ++ ('/':(show x))
 
-instance (KnownSymbol s, HasWrite r) => HasWrite (s :> r) where
-  type Writer ((s :: Symbol) :> r) = Writer r
+instance (KnownSymbol s, HasWrite r) => HasWrite (s :/ r) where
+  type Writer ((s :: Symbol) :/ r) = Writer r
 
   writeAt _ file = writeAt (Proxy @r) $ file ++ ('/':symb)
       where symb = symbolVal (Proxy @s)

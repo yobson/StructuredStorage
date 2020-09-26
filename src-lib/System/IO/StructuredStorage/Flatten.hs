@@ -15,8 +15,8 @@ import Data.Proxy
 import System.IO.StructuredStorage
 
 type family Flatten (api :: k) :: k where
-  Flatten ((a :: k) :> (b :<|> c)) = Flatten (a :> b) :<|> Flatten (a :> c)
-  Flatten ((a :: k) :> b)          = Flatten a :> Flatten b
+  Flatten ((a :: k) :/ (b :<|> c)) = Flatten (a :/ b) :<|> Flatten (a :/ c)
+  Flatten ((a :: k) :/ b)          = Flatten a :/ Flatten b
   Flatten (a :<|> b)               = Flatten a :<|> Flatten b
   Flatten a                        = a
 
