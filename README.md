@@ -58,7 +58,8 @@ type FileAPI = "tmp" :/ (  "Current" :/ Capture Department :/ File "people.json"
                         )
 
 -- In the api defined above, we two folders, tmp/Current and tmp/Old
--- In both, we have a file named 'people.json'
+-- In both current we have /IT and /Development, both of which can
+-- contain people.json. We can have a People.json in tmp/old
 
 -- We now define the functions to access the files
 currentPeople :: Department -> FileMonad ()
@@ -68,7 +69,7 @@ oldPeople     :: FileMonad ()
 api :: Proxy FileAPI
 api = Proxy
 
--- We magically fill the functions defined above!
+-- We magically fill the functions defined above and prefix our api with /
 currentPeople :<|> oldPeople = clientAt (flatten api) "/"
 
 someIOOperations :: FileMonad (Maybe [Person])
